@@ -7,9 +7,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TournamentTracker;
 
 namespace TournamentTrackerUI
 {
+    /// <summary>
+    /// createPrize class will actually validate the data and 
+    /// send it to our PrizeModel class where our fields are initialize by the valid values.
+    /// </summary>
     public partial class CreatePrize : Form
     {
         public CreatePrize()
@@ -17,49 +22,79 @@ namespace TournamentTrackerUI
             InitializeComponent();
         }
 
-        private void HeaderLabel_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Method will pass the valid values to PrizeModel class 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CreatePrizeButton_Click(object sender, EventArgs e)
         {
+            if(ValidateForm())
+            {
+                PrizeModel Model = new PrizeModel(
+                    PlaceNumbervalue.Text,
+                    PlaceNameValue.Text,
+                    PrizeAmountValue.Text,
+                    PrizePercentageValue.Text);
+                foreach(Idataconnection Db in ConnectionConfig.Connections)
+                {
+                    Db.CreatePrize(Model);
+                }
 
+            }
+            else
+            {
+                MessageBox.Show("Entered Value are not correct try again ");
+            }
+           
         }
 
-        private void FirstNameTextBox_TextChanged(object sender, EventArgs e)
+        /// <summary>
+        /// Method validate the CreatePrizeForm Entry
+        /// </summary>
+        /// <returns></returns>
+        private bool ValidateForm()
         {
+            bool OutPut = true;
+            int PlaceNumber = 0;
+            bool PlaceNumberValidate = int.TryParse(PlaceNumbervalue.Text, out PlaceNumber);
 
-        }
+            if(PlaceNumberValidate == false)
+            {
+                OutPut = false;
+            }
+            if(PlaceNumber < 1)
+            {
+                OutPut = false;
 
-        private void label1_Click(object sender, EventArgs e)
-        {
+            }
+            if(PlaceNameValue.Text.Length == 0)
+            {
+                OutPut = false;
 
-        }
+            }
+            decimal PrizeAmount = 0;
+            double PrizePercentage = 0;
+            bool PrizeAmountValidate = decimal.TryParse(PrizeAmountValue.Text, out PrizeAmount);
+         
+            bool PrizePercentageValidate = double.TryParse(PrizePercentageValue.Text, out PrizePercentage);
+            if (PrizeAmount <= 0 && PrizePercentage <= 0)
+            {
+                OutPut = false;
 
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
+            }
+            if(PrizeAmountValidate == false || PrizePercentageValidate == false)
+            {
+                OutPut = false;
 
-        }
+            }
+            if(PrizePercentage <=0 || PrizePercentage >100)
+            {
+                OutPut = false;
 
-        private void PlaceNameLabel_Click(object sender, EventArgs e)
-        {
+            }
 
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void PrizePercentageLabel_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void PrizePercentageValue_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click_1(object sender, EventArgs e)
-        {
-
+            return OutPut;
         }
     }
 }
