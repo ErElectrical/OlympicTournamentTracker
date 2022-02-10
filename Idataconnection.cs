@@ -16,6 +16,8 @@ namespace TournamentTracker
 
         PersonModel CreatePlayer(PersonModel Model);
 
+        TeamModel CreateTeam(TeamModel Model);
+
         List<PersonModel> GetPerson_All();
     }
 }
