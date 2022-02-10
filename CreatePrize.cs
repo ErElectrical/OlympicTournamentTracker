@@ -15,11 +15,17 @@ namespace TournamentTrackerUI
     /// createPrize class will actually validate the data and 
     /// send it to our PrizeModel class where our fields are initialize by the valid values.
     /// </summary>
+    /// 
+
+    
     public partial class CreatePrize : Form
     {
-        public CreatePrize()
+        IPrizeRequest CallingForm;
+        public CreatePrize(IPrizeRequest Caller)
         {
             InitializeComponent();
+
+            CallingForm = Caller;
         }
 
         /// <summary>
@@ -29,22 +35,19 @@ namespace TournamentTrackerUI
         /// <param name="e"></param>
         private void CreatePrizeButton_Click(object sender, EventArgs e)
         {
-            if(ValidateForm())
+            if (ValidateForm())
             {
                 PrizeModel Model = new PrizeModel(
                     PlaceNumbervalue.Text,
                     PlaceNameValue.Text,
                     PrizeAmountValue.Text,
                     PrizePercentageValue.Text);
-                foreach(Idataconnection Db in ConnectionConfig.Connections)
-                {
-                    Db.CreatePrize(Model);
-                }
 
-            }
-            else
-            {
-                MessageBox.Show("Entered Value are not correct try again ");
+                ConnectionConfig.Connections.Add((Idataconnection)Model);
+
+                CallingForm.PrizeComplete(Model);
+
+                this.Close();
             }
            
         }
@@ -78,7 +81,7 @@ namespace TournamentTrackerUI
             bool PrizeAmountValidate = decimal.TryParse(PrizeAmountValue.Text, out PrizeAmount);
          
             bool PrizePercentageValidate = double.TryParse(PrizePercentageValue.Text, out PrizePercentage);
-            if (PrizeAmount <= 0 && PrizePercentage <= 0)
+            if (PrizeAmount < 0 && PrizePercentage < 0)
             {
                 OutPut = false;
 
@@ -88,7 +91,7 @@ namespace TournamentTrackerUI
                 OutPut = false;
 
             }
-            if(PrizePercentage <=0 || PrizePercentage >100)
+            if(PrizePercentage <0 || PrizePercentage >100)
             {
                 OutPut = false;
 
