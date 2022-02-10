@@ -40,6 +40,7 @@ namespace TournamentTracker
             }
         }
 
+
         public PersonModel CreatePlayer(PersonModel Model)
         {
             using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
@@ -81,6 +82,33 @@ namespace TournamentTracker
             }
             return output;
 
+        }
+
+        public TeamModel CreateTeam(TeamModel Model)
+        {
+            using(SqlConnection connection=new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
+            {
+                var p = new  DynamicParameters();
+                p.Add("@TeamName", Model.TeamName);
+                p.Add("@id", 0, dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.Output);
+
+                connection.Open();
+                connection.Execute("spTeams_Insert", p, commandType: System.Data.CommandType.StoredProcedure);
+                
+
+                Model.Id = p.Get<int>("@id");
+
+                foreach(PersonModel tm in Model.Teammembers)
+                {
+                    p = new DynamicParameters();
+                    p.Add("@TeamId", Model.Id);
+                    p.Add("@@PlayerId", tm.id);
+
+                    connection.Execute("spTeamMembers_Insert", p, commandType: System.Data.CommandType.StoredProcedure);
+                }
+                return Model;
+
+            }
         }
     }    
 
