@@ -184,5 +184,41 @@ namespace TournamentTrackerUI
                 MessageBox.Show("Please Select Prize ");
             }
         }
+
+        private void CreateTournamentButton_Click(object sender, EventArgs e)
+        {
+            //Validate data
+
+            decimal fee = 0;
+            bool feeAcceptable = decimal.TryParse(EntryFeeValue.Text, out fee);
+            if(!feeAcceptable)
+            {
+                MessageBox.Show("Plase enter a valid entry fee",
+                                "Invalid Format",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+                return;
+            }
+
+            //create Tournament Entry
+
+            TournamentModel tm = new TournamentModel();
+            tm.TournamentName = TournamentNameValue.Text;
+            tm.EntryFees = fee;
+
+
+
+            //Create Prize Entry
+
+            tm.prizes = SelectedPrizes;
+
+            //Create all of Team Entry
+            tm.EnteredTeams = SelectedTeams;
+            //craete all Matchups
+            TournamentLogic.CreateRounds(tm);
+
+            ConnectionConfig.Connections.Add((Idataconnection)tm);
+
+        }
     }
 }

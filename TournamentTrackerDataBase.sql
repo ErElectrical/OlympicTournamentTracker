@@ -12,6 +12,8 @@ create table TournamentsPrizes
 	primary key (id)
 );
 
+select * from TournamentsPrizes;
+
 create table Tournaments
 (
 	id int not null identity,
@@ -19,6 +21,19 @@ create table Tournaments
 	EntryFees int not null,
 	Primary key(id)
 );
+
+Alter Procedure dbo.spInsert_Tournaments
+	@TournamentsName varchar(100),
+	@EntryFees int ,
+	@id int = 0 output
+as
+begin
+	insert into dbo.Tournaments(TournamentsName,EntryFees)
+	values(@TournamentsName,@EntryFees)
+	select @id=SCOPE_IDENTITY();
+end
+go
+
 
 create table DistributePrizes
 (
@@ -32,12 +47,49 @@ create table DistributePrizes
 
 );
 
+create Procedure dbo.spDistributePrizes_Insert
+	@TournamentsId int,
+	@PrizeId int,
+	@id int = 0 output
+as
+begin
+	insert into dbo.DistributePrizes(TournamentsId,PrizeId)
+	values(@TournamentsId,@PrizeId);
+
+	select @id= SCOPE_IDENTITY();
+end
+go
+
+
+
+
 create table Teams
 (
 	id int not null identity ,
 	TeamName varchar(100) not null,
 	primary key(id)
 );
+
+create Procedure dbo.spGetTeam_All
+as
+begin
+	select * from 
+	dbo.Teams
+end 
+go
+
+create Procedure dbo.spTeams_Insert
+	@TeamName varchar(100),
+	@id int = 0 output
+as
+begin
+	insert into Teams(TeamName)
+	values(@TeamName)
+
+	select @id=SCOPE_IDENTITY();
+end
+go
+	
 
 create table TournamentsEntries
 (
@@ -52,6 +104,19 @@ create table TournamentsEntries
 
 );
 
+create Procedure dbo.spTournamentsEntries_Insert
+	@TournamentsId int,
+	@TeamId int,
+	@id int = 0 output
+as
+begin
+	insert into TournamentsEntries(TournamentsId,TeamId)
+	values(@TournamentsId,@TeamId);
+
+	select @id=SCOPE_IDENTITY();
+end
+go
+
 create table Player
 (
 	id int not null identity,
@@ -61,6 +126,37 @@ create table Player
 	CellPhonenumber bigint not null,
 	Primary key(id)
 );
+
+create Procedure dbo.spGetPlayer_All
+as
+begin
+	select * from Player
+end 
+go
+
+exec dbo.spGetPlayer_All;
+
+create Procedure dbo.spInsertPlayer
+	@FirstName varchar(100),
+	@LastName varchar(100),
+	@EmailAddress varchar(300),
+	@CellPhonenumber bigint,
+	@id int = 0 output
+as
+begin
+	insert into dbo.Player(FirstName,LastName,EmailAddress,CellPhonenumber)
+	values
+	(
+		@FirstName,
+		@LastName,
+		@EmailAddress,
+		@CellPhonenumber
+	);
+
+	select @id=SCOPE_IDENTITY();
+end
+go
+
 
 create table TeamMembers 
 (
@@ -74,6 +170,19 @@ create table TeamMembers
 	
 );
 
+create Procedure dbo.spTeamMembers_Insert
+	@TeamId int,
+	@PlayerId int,
+	@id int = 0 output
+as
+begin
+	insert into TeamMembers(TeamId,PlayerId)
+	values(@TeamId,@PlayerId)
+
+	select @id=SCOPE_IDENTITY();
+end
+go
+
 create table MatchUps
 (
 	id int not null identity,
@@ -84,6 +193,24 @@ create table MatchUps
 
 
 );
+
+alter table dbo.MatchUps
+
+ add  TournamentId int,
+ foreign key(TournamentId) REFERENCES Tournaments(id)
+
+create Procedure dbo.spInsert_Matchups
+	@MatchUpRounds int,
+	@TournamentId int,
+	@id int=0 output
+as
+begin
+ insert into dbo.MatchUps(MatchUpRounds,TournamentId)
+ values(@MatchUpRounds,@TournamentId)
+ select @id=SCOPE_IDENTITY();
+end
+go
+
 
 create table MatchupEntries
 (
@@ -101,6 +228,21 @@ create table MatchupEntries
 
 
 );
+
+create Procedure dbo.spMatchupsEntries_Insert
+	@Matchupid int,
+	@ParentMatchupid int,
+	@Teamcompetingid int,
+	@id int = 0 output
+as
+begin
+	insert into dbo.MatchupEntries(Matchupid,ParentMatchupid,Teamcompetingid)
+	values(@Matchupid,@ParentMatchupid,@Teamcompetingid)
+
+	select @id=SCOPE_IDENTITY();
+end
+go
+
 
 create Procedure [dbo].[spPrizes_GetbyTournaments]
 	@TournamentsId int
@@ -156,3 +298,45 @@ Begin
 	inner join dbo.Teams on T.TeamId=dbo.Teams.id
 	where T.TeamId=@Teamid;
 end
+
+create Procedure dbo.spInsertTournamentPrize
+	@Placenumber int,
+	@PlaceName Varchar(50),
+	@PrizeAmount money,
+	@PrizePercentage float,
+	@id int=0 output
+as 
+begin
+	insert into dbo.TournamentsPrizes(Placenumber,PlaceName,PrizeAmount,PrizePercentage)
+	values(
+		@Placenumber,
+		@PlaceName,
+		@PrizeAmount,
+		@PrizePercentage
+	);
+
+	--SCOPE_IDENTITY() 
+	--returns the IDENTITY value inserted in Table
+	-- This was the last insert that occurred in the same scope.
+	-- The SCOPE_IDENTITY() function returns the null value if the function is invoked 
+	-- before any INSERT statements into an identity column occur in the scope.
+	select @id=SCOPE_IDENTITY();
+End
+go
+
+create Procedure dbo.spTeamMembers_GetByTeams
+	@Teamid int
+as
+begin
+	set nocount on;
+
+	select p.*
+	from dbo.TeamMembers m
+	inner join dbo.Player p on m.PlayerId=p.id
+	where m.TeamId=@Teamid;
+end 
+go
+
+
+
+
