@@ -132,5 +132,12 @@ namespace TournamentTracker
         {
             return TeamModelFile.FullFilePath().LoadFile().ConvertToTeamModels(PersonFile);
         }
+
+        public List<TournamentModel> GetTournament_All()
+        {
+            return TournamentModelFile.FullFilePath().
+                    LoadFile().ConvertToTournamentsModel(TeamModelFile, PersonFile, PrizesFile);
+        }
+
     }
 }
