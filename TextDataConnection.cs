@@ -139,5 +139,11 @@ namespace TournamentTracker
                     LoadFile().ConvertToTournamentsModel(TeamModelFile, PersonFile, PrizesFile);
         }
 
+        public void UpdateMatchup(MatchupModel model)
+        {
+            model.UpdateMatchupToFile();
+        }
+
+       
     }
 }
