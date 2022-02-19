@@ -13,7 +13,7 @@ namespace TournamentTrackerUI
 {
     public partial class TournamentDashBoard : Form
     {
-        List<TournamentModel> tournaments = ConnectionConfig.Connections.GetTournaments_All();
+        List<TournamentModel> tournaments = ConnectionConfig.Connections.GetTournament_All();
         public TournamentDashBoard()
         {
             InitializeComponent();
@@ -21,7 +21,22 @@ namespace TournamentTrackerUI
 
         private void CretateTournamentButton_Click(object sender, EventArgs e)
         {
+            EnterTournamentForm frm = new EnterTournamentForm();
+            frm.Show();
 
+        }
+        private void WireupLists()
+        {
+            LoadExistingTournamentDropDownMenu.DataSource=tournaments;
+            LoadExistingTournamentDropDownMenu.DisplayMember = "TournamentName";
+
+        }
+
+        private void LoadExistingTournamentButton_Click(object sender, EventArgs e)
+        {
+            TournamentModel tm = (TournamentModel)LoadExistingTournamentDropDownMenu.SelectedItem;
+            TournamentTrackerForm frm = new TournamentTrackerForm(tm);
+            frm.Show();
         }
     }
 }

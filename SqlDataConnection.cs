@@ -249,7 +249,7 @@ namespace TournamentTracker
 
         public List<TournamentModel> GetTournament_All()
         {
-            List<TournamentModel> output;
+            List<TournamentModel> output = new List<TournamentModel>();
             try
             {
                 SqlConnection connection = new System.Data.SqlClient.
@@ -266,8 +266,8 @@ namespace TournamentTracker
                     t.EnteredTeams = connection.Query<TeamModel>("spTeam_getBytournament").ToList();
                     foreach(TeamModel team in t.EnteredTeams)
                     {
-                        var p = new DynamicParameters();
-                        p.Add("TeamId", team.Id);
+                        var k = new DynamicParameters();
+                        k.Add("TeamId", team.Id);
                         team.Teammembers = connection.Query<PersonModel>("spTeamMembers_GetByTeam").ToList();
 
 
@@ -285,20 +285,20 @@ namespace TournamentTracker
                         //populate each Matchup(1 model)
 
                         List<TeamModel> allTeams = GetTeam_All();
-                        if(m.winner > 0)
+                        if(m.winner.Id > 0)
                         {
-                            m.winner = allTeams.Where(x => x.Id == m.winner).First();
+                            m.winner = allTeams.Where(x => x.Id == m.winner.Id).First();
                         }
                         foreach(var me in m.Entries)
                         {
-                            if(me.TeamCompeting > 0)
+                            if(me.TeamCompeting.Id > 0)
                             {
-                                me.TeamCompeting = allTeams.Where(x => x.Id == me.TeamCompeting).First();
+                                me.TeamCompeting = allTeams.Where(x => x.Id == me.TeamCompeting.Id).First();
 
                             }
-                            if(me.ParentMatchup > 0)
+                            if(me.ParentMatchup.id > 0)
                             {
-                                me.ParentMatchup = matchups.Where(x => x.id == me.ParentMatchup).First();
+                                me.ParentMatchup = matchups.Where(x => x.id == me.ParentMatchup.id).First();
                             }
                         }
                         //round list<list<matchupModel>>
@@ -321,7 +321,9 @@ namespace TournamentTracker
 
 
                     }
-                    
+                    return output;
+
+
 
 
                 }
@@ -334,6 +336,42 @@ namespace TournamentTracker
             catch(Exception e)
             {
                 Console.WriteLine(e.Message);
+            }
+            return output;
+            
+            
+        }
+
+        public void UpdateMatchup(MatchupModel model)
+        {
+            using (SqlConnection connection = new System.Data.SqlClient.SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
+            {
+                connection.Open();
+                var p = new DynamicParameters();
+                if (model.winner != null)
+                {
+
+
+                    p.Add("@id", model.id);
+                    p.Add("@winnerId", model.winnerId);
+                    connection.Execute("spMatchups_Update", p, commandType: System.Data.CommandType.StoredProcedure);
+                }
+                foreach(MatchupEntryModel me in model.Entries)
+                {
+                    if (me.TeamCompeting != null)
+                    {
+
+
+                        p = new DynamicParameters();
+                        p.Add("@id", me.Id);
+                        p.Add("@TeamCompeteingid", me.TeamCompeting.Id);
+                        p.Add("@score", me.Score);
+                        connection.Execute("spMatchupEntries_Update", p, commandType: System.Data.CommandType.StoredProcedure);
+                    }
+                }
+
+
+
             }
             
         }

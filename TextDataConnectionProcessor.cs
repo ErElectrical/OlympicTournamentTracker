@@ -462,6 +462,72 @@ namespace TournamentTracker
 
         }
 
-       
+        public static void UpdateMatchupToFile(this MatchupModel matchup)
+        {
+            List<MatchupModel> matchups = ConnectionConfig.MatchupModelFile.FullFilePath().LoadFile().ConvertToMatchupModel();
+            MatchupModel oldmatchup = new MatchupModel();
+            foreach (MatchupModel m in matchups)
+            {
+                if (m.id == matchup.id)
+                {
+                    oldmatchup = m;
+                }
+            }
+            matchups.Remove(oldmatchup);
+            matchups.Add(matchup);
+            foreach (MatchupEntryModel me in matchup.Entries)
+            {
+                UpdateEntryToFile(me);
+            }
+
+            //save to file
+            List<string> lines = new List<string>();
+
+            foreach (MatchupModel m in matchups)
+            {
+                string winner = " ";
+                if (m.winner != null)
+                {
+                    winner = m.winner.Id.ToString();
+
+                }
+                lines.Add($"{ m.id },{ ConvertMatchupEntryListToString(m.Entries) },{ winner},{ m.MatchupRound }");
+            }
+            File.WriteAllLines(ConnectionConfig.MatchupModelFile.FullFilePath(), lines);
+
+        }
+
+
+        public static void UpdateEntryToFile(this MatchupEntryModel MatchupEntry)
+        {
+            List<MatchupEntryModel> entries = ConnectionConfig.MatchupEntryModelFile.FullFilePath().LoadFile().ConvertToMatchupEntryModel();
+            MatchupEntryModel oldentry = new MatchupEntryModel();
+            foreach(MatchupEntryModel e in entries)
+            {
+                if(e.Id == MatchupEntry.Id)
+                {
+                    oldentry = e;
+                }
+            }
+            entries.Remove(oldentry);
+            entries.Add(MatchupEntry);
+
+            List<string> lines = new List<string>();
+            foreach (MatchupEntryModel e in entries)
+            {
+                string ParentMatchupid = " ";
+                if (e.ParentMatchup != null)
+                {
+                    ParentMatchupid = e.ParentMatchup.id.ToString();
+                }
+                lines.Add($"{ e.Id },{ e.TeamCompeting.Id },{ e.Score },{ ParentMatchupid }");
+            }
+
+            //save to file
+
+            File.WriteAllLines(ConnectionConfig.MatchupEntryModelFile.FullFilePath(), lines);
+        }
+
+
     }
 }
