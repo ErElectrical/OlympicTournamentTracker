@@ -219,6 +219,12 @@ namespace TournamentTrackerUI
 
             ConnectionConfig.Connections.Add((Idataconnection)tm);
 
+            TournamentLogic.UpdateTournamentsResult(tm);
+
+            TournamentTrackerForm frm = new TournamentTrackerForm(tm);
+            frm.Show();
+            this.Close();
+
         }
     }
 }
