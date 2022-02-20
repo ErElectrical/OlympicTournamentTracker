@@ -218,6 +218,7 @@ namespace TournamentTrackerUI
             TournamentLogic.CreateRounds(tm);
 
             ConnectionConfig.Connections.Add((Idataconnection)tm);
+            tm.AlertUsersToNewRound();
 
             TournamentLogic.UpdateTournamentsResult(tm);
 
