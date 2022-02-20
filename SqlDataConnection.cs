@@ -13,8 +13,18 @@ namespace TournamentTracker
         public SqlDataConnection()
         {
 
+
         }
-        public PrizeModel CreatePrize(PrizeModel Model)
+
+        /// <summary>
+        /// what to do
+        /// store the Prize in mssql Db
+        /// establish the connection
+        /// enable the connection to connect to db
+        /// update all the entry in db that is available in our model class named as prizeModel
+       /// </summary>
+        /// <param name="Model"></param>
+        public void  CreatePrize(PrizeModel Model)
         {
 
             using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
@@ -37,15 +47,25 @@ namespace TournamentTracker
                 cmd.Parameters.Add(p);
 
 
+                //save the id that we are providing to Db as Id act as a identifier in our model 
+                //class design also.
                 Model.Id = p.Get<int>("@id");
 
-                return Model;
+               
 
             }
         }
 
-
-        public PersonModel CreatePlayer(PersonModel Model)
+        /// <summary>
+        /// what to do 
+        /// establish the connectio to db
+        /// enable the connection to connect to db
+        /// add all the entity in db from Model class PersonModel
+        /// store all the id as id is only way to identification
+        /// 
+        /// </summary>
+        /// <param name="Model"></param>
+        public void  CreatePlayer(PersonModel Model)
         {
             using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
             {
@@ -67,13 +87,23 @@ namespace TournamentTracker
 
                 Model.id = p.Get<int>("@id");
 
-                return Model;
+                
 
 
             }
 
         }
 
+        /// <summary>
+        /// what to do
+        /// create  a list of personmodel as output list
+        /// establish connection with db
+        /// connect to db
+        /// run a stored procedure query get all the player details 
+        /// store back to output list
+        /// return the output list
+        /// </summary>
+        /// <returns></returns>
         public List<PersonModel> GetPerson_All()
         {
             List<PersonModel> output;
@@ -88,7 +118,15 @@ namespace TournamentTracker
 
         }
 
-        public TeamModel CreateTeam(TeamModel Model)
+        /// <summary>
+        /// what to do 
+        /// establish the connection to db
+        /// connect it to db
+        /// populate the entity of teammodel
+        /// get back the id
+        /// </summary>
+        /// <param name="Model"></param>
+        public void  CreateTeam(TeamModel Model)
         {
             using(SqlConnection connection=new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
             {
@@ -102,19 +140,30 @@ namespace TournamentTracker
 
                 Model.Id = p.Get<int>("@id");
 
+                //as teammember is of type personmodel
+                //therefore we have to populate the entity by using a new storedProcedure
                 foreach(PersonModel tm in Model.Teammembers)
                 {
                     p = new DynamicParameters();
                     p.Add("@TeamId", Model.Id);
-                    p.Add("@@PlayerId", tm.id);
+                    p.Add("@PlayerId", tm.id);
 
                     connection.Execute("spTeamMembers_Insert", p, commandType: System.Data.CommandType.StoredProcedure);
                 }
-                return Model;
+                
 
             }
         }
 
+        /// <summary>
+        /// what to do 
+        /// get back a list of team that conatin information about teams and there member
+        /// establish the connection
+        /// get all the teams to a output list of teammodel class type
+        /// get back the members based on specific team id and populate the teammebers 
+        /// return back the list of teammodel output
+        /// </summary>
+        /// <returns></returns>
         public List<TeamModel> GetTeam_All()
         {
             List<TeamModel> output;
@@ -134,8 +183,18 @@ namespace TournamentTracker
             }
             return output;
         }
-
-        public TournamentModel CreateTournament(TournamentModel Model)
+        /// <summary>
+        /// what to do
+        /// establish connection to db
+        /// connect to db
+        /// add tournament name
+        /// add tournament fee
+        /// add tournament prizes
+        /// add tournament entries
+        /// add tournaments round infromation
+        /// </summary>
+        /// <param name="Model"></param>
+        public void  CreateTournament(TournamentModel Model)
         {
             using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
             {
@@ -180,7 +239,11 @@ namespace TournamentTracker
                 }
 
                 //To do Add Rounds Information
-                return Model;
+
+                SaveTournamentRounds(sqlConnection, Model);
+                TournamentLogic.UpdateTournamentsResult(Model);
+
+
 
 
 
@@ -341,7 +404,15 @@ namespace TournamentTracker
             
             
         }
-
+        /// <summary>
+        /// what to do
+        /// establish connection to db
+        /// connect to db
+        /// populate id and get back it
+        /// populate winnerid
+        /// populate the entry  to get infromation of matchupentrymodel
+        /// </summary>
+        /// <param name="model"></param>
         public void UpdateMatchup(MatchupModel model)
         {
             using (SqlConnection connection = new System.Data.SqlClient.SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))

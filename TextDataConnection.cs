@@ -11,33 +11,32 @@ namespace TournamentTracker
     /// Method save Data to text file
     /// </summary>
     public class TextDataConnection:Idataconnection
-    {
-        public const string PrizesFile = "PrizeModel.csv";
-        public const string PersonFile = "PersonModel.csv";
-        public const string TeamModelFile = "TeamModel.csv";
-        public const string TournamentModelFile = "TournamentModel.csv";
-        public const string MatchupModelFile = "MatchupModel.csv";
-        public const string MatchupEntryModelFile = "MatchupEntryModel.csv";
-
-        public PersonModel CreatePlayer(PersonModel Model)
+    { 
+        public void  CreatePlayer(PersonModel Model)
         {
-            List<PersonModel> Players = PersonFile.FullFilePath().LoadFile().ConvertToPersonModel();
-
+            //list of personModel conatin all players information available in personfile
+            List<PersonModel> Players = ConnectionConfig.PersonFile.FullFilePath().LoadFile().ConvertToPersonModel();
+            
+            //set id zero because at start we dont have any id for player
             int currentId = 0;
+            //check weather we have player available in player list because no way to provide a null to id
             if(Players.Count == 0)
             {
+                //provide first id to current id and as many time if condition exists increase the id by 1
+                //so that we will get unique id every time
                 currentId = Players.OrderByDescending(x => x.id).First().id + 1;
             }
-
+            //store the id to our personmodel id
             Model.id = currentId;
-
+            //add the model to player list
             Players.Add(Model);
-            Players.SaveToPersonFile(PersonFile);
+            //save the data to required text file
+            Players.SaveToPersonFile();
 
-            return Model;
+            
         }
 
-        public PrizeModel CreatePrize(PrizeModel Model)
+        public void CreatePrize(PrizeModel Model)
         {
             //Load the text file
             // take data to List<Prize> 
@@ -46,7 +45,7 @@ namespace TournamentTracker
             //convert the Prizes to List<string>
             //save the list<String> to text file
 
-            List<PrizeModel> Prizes = PrizesFile.FullFilePath().LoadFile().ConvertToPrizeModel();
+            List<PrizeModel> Prizes = ConnectionConfig.PrizesFile.FullFilePath().LoadFile().ConvertToPrizeModel();
 
             //Find the max(id)
             int currentId = 1;
@@ -61,16 +60,27 @@ namespace TournamentTracker
 
             Prizes.Add(Model);
 
-            Prizes.SaveToPrizeFile(PrizesFile);
+            Prizes.SaveToPrizeFile();
 
-            return Model;
+          
 
 
         }
 
-        public TeamModel CreateTeam(TeamModel Model)
+        /// <summary>
+        /// what to do
+        /// create a varible for teams of teammodel
+        /// initialse the currennt id with value 1
+        /// check wethere the teams are available or not
+        /// if available populate the id and increase it by 1 at the time we donot instance all teams id
+        /// save back the get id to our model
+        /// add that model to our list
+        /// save the model to text file
+        /// </summary>
+        /// <param name="Model"></param>
+        public void CreateTeam(TeamModel Model)
         {
-            List<TeamModel> teams = TeamModelFile.FullFilePath().LoadFile().ConvertToTeamModels(PersonFile);
+            List<TeamModel> teams = ConnectionConfig.TeamModelFile.FullFilePath().LoadFile().ConvertToTeamModels();
 
             int currentId = 1;
             if (teams.Count < 0)
@@ -84,21 +94,30 @@ namespace TournamentTracker
 
             teams.Add(Model);
 
-            teams.SaveToTeamModelFile(TeamModelFile);
+            teams.SaveToTeamModelFile();
 
-            return Model;
+     
 
         }
 
-        public TournamentModel CreateTournament(TournamentModel Model)
+        /// <summary>
+        /// what to do
+        /// create a varible for tournament of tournament model
+        /// initialse the currennt id with value 1
+        /// check wethere the tournaments are available or not
+        /// if available populate the id and increase it by 1 at the time we donot instance all teams id
+        /// save back the get id to our model
+        /// add that model to our list
+        /// save the model to text file
+        /// </summary>
+        /// <param name="Model"></param>
+
+        public void CreateTournament(TournamentModel Model)
         {
-            List<TournamentModel> tournament = TournamentModelFile.
+            List<TournamentModel> tournament = ConnectionConfig.TournamentModelFile.
                                                 FullFilePath().
                                                 LoadFile().
-                                                ConvertToTournamentsModel(
-                                                TeamModelFile,
-                                                PersonFile,
-                                                PrizesFile);
+                                                ConvertToTournamentsModel();
             int currentId = 1;
             if (tournament.Count < 0)
             {
@@ -112,31 +131,34 @@ namespace TournamentTracker
 
             //Todo -- save the previous id of rounds as our logic dont take track of such things
 
-            Model.SaveRoundsTofile(MatchupEntryModelFile, MatchupModelFile);
+            Model.SaveRoundsTofile();
 
             tournament.Add(Model);
 
-            tournament.SaveToTournamentModelFile(TournamentModelFile);
+            TournamentLogic.UpdateTournamentsResult(Model);
 
-            return Model;
+
+            tournament.SaveToTournamentModelFile();
+
+            
 
         }
 
         public List<PersonModel> GetPerson_All()
         {
-            return PersonFile.FullFilePath().LoadFile().ConvertToPersonModel();
+            return ConnectionConfig.PersonFile.FullFilePath().LoadFile().ConvertToPersonModel();
 
         }
 
         public List<TeamModel> GetTeam_All()
         {
-            return TeamModelFile.FullFilePath().LoadFile().ConvertToTeamModels(PersonFile);
+            return ConnectionConfig.TeamModelFile.FullFilePath().LoadFile().ConvertToTeamModels();
         }
 
         public List<TournamentModel> GetTournament_All()
         {
-            return TournamentModelFile.FullFilePath().
-                    LoadFile().ConvertToTournamentsModel(TeamModelFile, PersonFile, PrizesFile);
+            return ConnectionConfig.TournamentModelFile.FullFilePath().
+                    LoadFile().ConvertToTournamentsModel();
         }
 
         public void UpdateMatchup(MatchupModel model)

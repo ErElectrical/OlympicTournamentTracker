@@ -13,10 +13,15 @@ namespace TournamentTrackerUI
 {
     public partial class TournamentDashBoard : Form
     {
-        List<TournamentModel> tournaments = ConnectionConfig.Connections.GetTournament_All();
+        List<TournamentModel> tournaments;
+        SqlDataConnection sql = new SqlDataConnection();
+       
+        
         public TournamentDashBoard()
         {
+
             InitializeComponent();
+            tournaments = sql.GetTournament_All().ToList();
         }
 
         private void CretateTournamentButton_Click(object sender, EventArgs e)
