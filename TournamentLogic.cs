@@ -134,6 +134,7 @@ namespace TournamentTracker
 
             public static void UpdateTournamentsResult(TournamentModel model)
             {
+            int startingRound = model.CheckCurrentRound();
             List<MatchupModel> toscore = new List<MatchupModel>();
             foreach(List<MatchupModel> round in model.Rounds)
             {
@@ -151,9 +152,180 @@ namespace TournamentTracker
                 AdvanceWinner(toscore,model);
                 SqlDataConnection sql = new SqlDataConnection();
                 toscore.ForEach(x => sql.UpdateMatchup(x));
+                int endingRound = model.CheckCurrentRound();
+                if(endingRound > startingRound)
+                {
+                   model.AlertUsersToNewRound();
+                }
 
             }
-            private static  void AdvanceWinner(List<MatchupModel> model,TournamentModel tournaments)
+            
+        public static void AlertUsersToNewRound(this TournamentModel model)
+        {
+            int currentRoundNumber = model.CheckCurrentRound();
+            List<MatchupModel> currentRound = model.Rounds.Where(x => x.First().MatchupRound == currentRoundNumber).First();
+            foreach(MatchupModel matchup in currentRound)
+            {
+                foreach(MatchupEntryModel me in matchup.Entries)
+                {
+                    foreach(PersonModel p in me.TeamCompeting.Teammembers)
+                    {
+                        AlertPersonToNewRound(p, me.TeamCompeting.TeamName, matchup.Entries.Where(x => x.TeamCompeting != me.TeamCompeting).FirstOrDefault());
+                    }
+                }
+            }
+        }
+        
+        private static void AlertPersonToNewRound(PersonModel p,string teamName,MatchupEntryModel competitor)
+        {
+            if(p.Email.Length == 0)
+            {
+                return;
+            }
+            string fromAddress = " ";
+            string to = " ";
+            string subject = " ";
+           
+            StringBuilder body = new StringBuilder();
+            if(competitor != null)
+            {
+                subject = $" you have a new matchup with {competitor.TeamCompeting.TeamName}";
+                body.AppendLine("<h1>You have a new matchup</h1>");
+                body.AppendLine("<strong>competitor : </strong>");
+                body.AppendLine(competitor.TeamCompeting.TeamName);
+                body.AppendLine();
+                body.AppendLine();
+                body.AppendLine("Have a great time!");
+                body.AppendLine("~Tournament Tracker");
+
+            }
+            else
+            {
+                subject = $"You have a bye week this round";
+                body.AppendLine("Enjoy your round off");
+                body.AppendLine("~Tournament Tracker");
+            }
+
+            to =p.Email;
+            fromAddress = ConnectionConfig.AppKeyLookup("senderEmail");
+
+            EmailLogic.SendEmail(fromAddress, to, subject, body.ToString());
+        }
+            private static int CheckCurrentRound(this TournamentModel model)
+            {
+                int output = 1;
+                foreach(List<MatchupModel> round in model.Rounds)
+                {
+                    if(round.All(x =>x.winner != null))
+                    {
+                        output++;
+                    }
+                    else
+                    {
+                    return output;
+                    }
+                
+                }
+                return output;
+                SqlDataConnection sql = new SqlDataConnection();
+                sql.CompleteTournament(model);
+                return output - 1;
+
+
+
+
+        }
+
+        private static void CompleteTournament(TournamentModel model)
+        {
+            SqlDataConnection sql = new SqlDataConnection();
+            sql.CompleteTournament(model);
+            TeamModel winners = model.Rounds.Last().First().winner;
+            TeamModel runnerup = model.Rounds.Last().First().Entries.Where(x => x.TeamCompeting != winners).First().TeamCompeting;
+            PrizeModel firstPlacePrize = model.prizes.Where(x => x.PlaceNumber == 1).FirstOrDefault();
+            PrizeModel secondPlacePrie = model.prizes.Where(x => x.PlaceNumber == 2).FirstOrDefault();
+
+            decimal totalincome = model.EnteredTeams.Count * model.EntryFees;
+            decimal winnerPrize = 0;
+            decimal runnerupperPrize = 0;
+
+
+            if (model.prizes.Count() > 0)
+            {
+                
+                if(firstPlacePrize != null)
+                {
+                    winnerPrize = firstPlacePrize.calculatePrizePayout(totalincome);
+                }
+                if(secondPlacePrie != null)
+                {
+                    runnerupperPrize = secondPlacePrie.calculatePrizePayout(totalincome);
+                }
+               
+
+
+            }
+            //send Email to all tournament
+            string subject = " ";
+
+            StringBuilder body = new StringBuilder();
+          
+            subject =$"In { model.TournamentName },{ winners.TeamName } has won";
+
+            body.AppendLine("<h1>We have a WINNER </h1>");
+            body.AppendLine("<strong>Congratulation to our winner on a great tournament </strong>");
+
+            body.AppendLine("<br />");
+            if(winnerPrize > 0)
+            {
+                body.AppendLine($" {winners.TeamName} will recive { winnerPrize }</p>");
+
+            }
+            if(runnerupperPrize > 0)
+            {
+                body.AppendLine($"<p> {runnerup.TeamName} will reciev { runnerupperPrize }");
+            }
+
+            body.AppendLine($"<p> Thanks all to great tournament</p>");
+            body.AppendLine("~Tournament Tracker ");
+
+            List<string> bcc = new List<string>();
+            foreach( TeamModel t in model.EnteredTeams)
+            {
+                foreach(PersonModel p in t.Teammembers)
+                {
+                    if(p.Email.Length > 0)
+                    {
+                        bcc.Add(p.Email);
+                    }
+                }
+            }
+            EmailLogic.SendEmail(new List<string>(), bcc, subject, body.ToString());
+
+            //CompleteTournaemnt
+            model.CompleteTournament();
+
+            
+
+        }
+
+        private static decimal calculatePrizePayout(this PrizeModel prize,decimal totalIncome)
+        {
+            decimal output = 0;
+            if(prize.PrizeAmount > 0 )
+            {
+                output = prize.PrizeAmount;
+            }
+            else
+            {
+                output = decimal.Multiply(totalIncome , Convert.ToDecimal(prize.PrizePercentage / 100));
+
+
+
+            }
+            return output;
+        }
+        private static  void AdvanceWinner(List<MatchupModel> model,TournamentModel tournaments)
             {
                 foreach(MatchupModel m in model)
                 {

@@ -11,7 +11,19 @@ namespace TournamentTracker
     /// Method save Data to text file
     /// </summary>
     public class TextDataConnection:Idataconnection
-    { 
+    {
+        public void CompleteTournament(TournamentModel Model)
+        {
+            List<TournamentModel> tournaments = ConnectionConfig.TournamentModelFile.
+                                               FullFilePath().
+                                               LoadFile().
+                                               ConvertToTournamentsModel();
+            tournaments.Remove(Model);
+            tournaments.SaveToTournamentModelFile();
+            TournamentLogic.UpdateTournamentsResult(Model);
+
+        }
+
         public void  CreatePlayer(PersonModel Model)
         {
             //list of personModel conatin all players information available in personfile

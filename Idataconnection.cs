@@ -12,12 +12,59 @@ namespace TournamentTracker
     /// </summary>
     public interface Idataconnection
     {
-        PrizeModel CreatePrize(PrizeModel Model);
+        //refactor Idataconnection as we do not model back because probably we donot do anything
 
-        PersonModel CreatePlayer(PersonModel Model);
+        /// <summary>
+        /// Method inistite the prizemodel
+        /// </summary>
+        /// <param name="Model"></param>
+        void CreatePrize(PrizeModel Model);
 
-        TeamModel CreateTeam(TeamModel Model);
+        /// <summary>
+        /// Method initialize the personModel
+        /// create player for tournaments
+        /// </summary>
+        /// <param name="Model"></param>
+        void CreatePlayer(PersonModel Model);
 
+        /// <summary>
+        /// Method initialie the Teammodel class entity
+        /// create a team of tournaments
+        /// </summary>
+        /// <param name="Model"></param>
+        void CreateTeam(TeamModel Model);
+
+        /// <summary>
+        /// Method initialize the TournamentModel class entity
+        /// create tournaments for various game
+        /// </summary>
+        /// <param name="Model"></param>
+        void CreateTournament(TournamentModel Model);
+
+        /// <summary>
+        /// Method returns all teams that are playing in current tournaments
+        /// </summary>
+        /// <returns></returns>
+        List<TeamModel> GetTeam_All();
+
+        /// <summary>
+        /// Method returns all the person that are playing in provided teams
+        /// </summary>
+        /// <returns></returns>
         List<PersonModel> GetPerson_All();
+
+        /// <summary>
+        /// Method provides the all tournaments that are currently in play
+        /// </summary>
+        /// <returns></returns>
+        List<TournamentModel> GetTournament_All();
+
+        /// <summary>
+        /// Update the matchup of teams that are plaing in the round
+        /// </summary>
+        /// <param name="model"></param>
+        void UpdateMatchup(MatchupModel model);
+
+        void CompleteTournament(TournamentModel Model);
     }
 }

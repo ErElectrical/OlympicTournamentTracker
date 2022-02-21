@@ -8,13 +8,9 @@ using Dapper;
 
 namespace TournamentTracker
 {
-    public class SqlDataConnection : Idataconnection
+    public  class SqlDataConnection : Idataconnection
     {
-        public SqlDataConnection()
-        {
 
-
-        }
 
         /// <summary>
         /// what to do
@@ -22,9 +18,9 @@ namespace TournamentTracker
         /// establish the connection
         /// enable the connection to connect to db
         /// update all the entry in db that is available in our model class named as prizeModel
-       /// </summary>
+        /// </summary>
         /// <param name="Model"></param>
-        public void  CreatePrize(PrizeModel Model)
+        public void CreatePrize(PrizeModel Model)
         {
 
             using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
@@ -51,7 +47,7 @@ namespace TournamentTracker
                 //class design also.
                 Model.Id = p.Get<int>("@id");
 
-               
+
 
             }
         }
@@ -65,7 +61,7 @@ namespace TournamentTracker
         /// 
         /// </summary>
         /// <param name="Model"></param>
-        public void  CreatePlayer(PersonModel Model)
+        public void CreatePlayer(PersonModel Model)
         {
             using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
             {
@@ -87,7 +83,7 @@ namespace TournamentTracker
 
                 Model.id = p.Get<int>("@id");
 
-                
+
 
 
             }
@@ -108,10 +104,10 @@ namespace TournamentTracker
         {
             List<PersonModel> output;
 
-            using(SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
+            using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
             {
                 output = sqlConnection.Query<PersonModel>("dbo.spGetPlayer_All").ToList();
-                
+
 
             }
             return output;
@@ -126,23 +122,23 @@ namespace TournamentTracker
         /// get back the id
         /// </summary>
         /// <param name="Model"></param>
-        public void  CreateTeam(TeamModel Model)
+        public void CreateTeam(TeamModel Model)
         {
-            using(SqlConnection connection=new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
+            using (SqlConnection connection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
             {
-                var p = new  DynamicParameters();
+                var p = new DynamicParameters();
                 p.Add("@TeamName", Model.TeamName);
                 p.Add("@id", 0, dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.Output);
 
                 connection.Open();
                 connection.Execute("spTeams_Insert", p, commandType: System.Data.CommandType.StoredProcedure);
-                
+
 
                 Model.Id = p.Get<int>("@id");
 
                 //as teammember is of type personmodel
                 //therefore we have to populate the entity by using a new storedProcedure
-                foreach(PersonModel tm in Model.Teammembers)
+                foreach (PersonModel tm in Model.Teammembers)
                 {
                     p = new DynamicParameters();
                     p.Add("@TeamId", Model.Id);
@@ -150,7 +146,7 @@ namespace TournamentTracker
 
                     connection.Execute("spTeamMembers_Insert", p, commandType: System.Data.CommandType.StoredProcedure);
                 }
-                
+
 
             }
         }
@@ -172,11 +168,11 @@ namespace TournamentTracker
             {
                 output = sqlConnection.Query<TeamModel>("dbo.spGetTeam_All").ToList();
 
-                foreach(TeamModel tm in output)
+                foreach (TeamModel tm in output)
                 {
                     var p = new DynamicParameters();
                     p.Add("@Teamid", tm.Id);
-                    tm.Teammembers = sqlConnection.Query<PersonModel>("spTeamMembers_GetByTeams",p,commandType:System.Data.CommandType.StoredProcedure).ToList();
+                    tm.Teammembers = sqlConnection.Query<PersonModel>("spTeamMembers_GetByTeams", p, commandType: System.Data.CommandType.StoredProcedure).ToList();
                 }
 
 
@@ -194,14 +190,14 @@ namespace TournamentTracker
         /// add tournaments round infromation
         /// </summary>
         /// <param name="Model"></param>
-        public void  CreateTournament(TournamentModel Model)
+        public void CreateTournament(TournamentModel Model)
         {
             using (SqlConnection sqlConnection = new SqlConnection(ConnectionConfig.CnnString("TournamentTrackerDataBase")))
             {
-                
+
 
                 sqlConnection.Open();
-                var p = new  DynamicParameters();
+                var p = new DynamicParameters();
                 //Add Tournament Name
                 p.Add("@TournamentsName", Model.TournamentName);
                 //Add Tournament Fee
@@ -212,7 +208,7 @@ namespace TournamentTracker
                 Model.Id = p.Get<int>("@id");
 
                 //Add Tournament Prizes
-                foreach(PrizeModel prize in Model.prizes)
+                foreach (PrizeModel prize in Model.prizes)
                 {
                     p = new DynamicParameters();
                     p.Add("@TournamentsId", Model.Id);
@@ -225,7 +221,7 @@ namespace TournamentTracker
 
                 }
                 //Add Tournament Team Entries
-                foreach(TeamModel Tm in Model.EnteredTeams)
+                foreach (TeamModel Tm in Model.EnteredTeams)
                 {
                     p = new DynamicParameters();
                     p.Add("@TournamentsId", Model.Id);
@@ -251,7 +247,7 @@ namespace TournamentTracker
 
         }
 
-        private  void SaveTournamentRounds(SqlConnection connection,TournamentModel Model)
+        private void SaveTournamentRounds(SqlConnection connection, TournamentModel Model)
         {
             //List<List<MatchupModel>> Rounds
             //List<MatchupModel> Entries
@@ -261,10 +257,10 @@ namespace TournamentTracker
             //Loop through the Entries and save them.
 
             //Loop through the rounds
-            foreach(List<MatchupModel> round in Model.Rounds)
+            foreach (List<MatchupModel> round in Model.Rounds)
             {
                 //Loop through the MatchupModel
-                foreach(MatchupModel Matchup in round)
+                foreach (MatchupModel Matchup in round)
                 {
                     //save the Matchup
                     var p = new DynamicParameters();
@@ -278,12 +274,12 @@ namespace TournamentTracker
                     Matchup.id = p.Get<int>("@id");
 
                     //Loop through the MatchuEntry
-                    foreach(MatchupEntryModel Entry in Matchup.Entries)
+                    foreach (MatchupEntryModel Entry in Matchup.Entries)
                     {
                         //Save the MatchupEntry
                         p = new DynamicParameters();
                         p.Add("@Matchupid", Matchup.id);
-                        if(Entry.ParentMatchup == null)
+                        if (Entry.ParentMatchup == null)
                         {
                             p.Add("@ParentMatchupid", null);
                         }
@@ -319,15 +315,15 @@ namespace TournamentTracker
                                                 SqlConnection(ConnectionConfig.
                                                     CnnString(DataTypeenum.DataBase.ToString()));
                 connection.Open();
-                output=connection.Query<TournamentModel>("spTournamentview_All").ToList();
+                output = connection.Query<TournamentModel>("spTournamentview_All").ToList();
                 //populate prizes
-                foreach(TournamentModel t in output)
+                foreach (TournamentModel t in output)
                 {
                     //populate prizes
                     t.prizes = connection.Query<PrizeModel>("spPrizes_GetbyTournaments").ToList();
                     //populate teams
                     t.EnteredTeams = connection.Query<TeamModel>("spTeam_getBytournament").ToList();
-                    foreach(TeamModel team in t.EnteredTeams)
+                    foreach (TeamModel team in t.EnteredTeams)
                     {
                         var k = new DynamicParameters();
                         k.Add("TeamId", team.Id);
@@ -339,7 +335,7 @@ namespace TournamentTracker
                     var p = new DynamicParameters();
                     p.Add("@TournamentId", t.Id);
                     List<MatchupModel> matchups = connection.Query<MatchupModel>("spMatchups_GetByTournament", p, commandType: System.Data.CommandType.StoredProcedure).ToList();
-                    foreach(MatchupModel m in matchups)
+                    foreach (MatchupModel m in matchups)
                     {
                         p = new DynamicParameters();
                         p.Add("@MatchupId", m.id);
@@ -348,18 +344,18 @@ namespace TournamentTracker
                         //populate each Matchup(1 model)
 
                         List<TeamModel> allTeams = GetTeam_All();
-                        if(m.winner.Id > 0)
+                        if (m.winner.Id > 0)
                         {
                             m.winner = allTeams.Where(x => x.Id == m.winner.Id).First();
                         }
-                        foreach(var me in m.Entries)
+                        foreach (var me in m.Entries)
                         {
-                            if(me.TeamCompeting.Id > 0)
+                            if (me.TeamCompeting.Id > 0)
                             {
                                 me.TeamCompeting = allTeams.Where(x => x.Id == me.TeamCompeting.Id).First();
 
                             }
-                            if(me.ParentMatchup.id > 0)
+                            if (me.ParentMatchup.id > 0)
                             {
                                 me.ParentMatchup = matchups.Where(x => x.id == me.ParentMatchup.id).First();
                             }
@@ -369,9 +365,9 @@ namespace TournamentTracker
                         List<MatchupModel> currentrow = new List<MatchupModel>();
                         int currentRound = 1;
 
-                        foreach(MatchupModel mp in matchups)
+                        foreach (MatchupModel mp in matchups)
                         {
-                            if(mp.MatchupRound > currentRound)
+                            if (mp.MatchupRound > currentRound)
                             {
                                 t.Rounds.Add(currentrow);
                                 currentrow = new List<MatchupModel>();
@@ -396,13 +392,13 @@ namespace TournamentTracker
                 //populate Rounds
 
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
             return output;
-            
-            
+
+
         }
         /// <summary>
         /// what to do
@@ -427,7 +423,7 @@ namespace TournamentTracker
                     p.Add("@winnerId", model.winnerId);
                     connection.Execute("spMatchups_Update", p, commandType: System.Data.CommandType.StoredProcedure);
                 }
-                foreach(MatchupEntryModel me in model.Entries)
+                foreach (MatchupEntryModel me in model.Entries)
                 {
                     if (me.TeamCompeting != null)
                     {
@@ -444,8 +440,22 @@ namespace TournamentTracker
 
 
             }
-            
-        }
-    }    
 
+        }
+
+        public void CompleteTournament(TournamentModel Model)
+        {
+            using (SqlConnection connection = new System.Data.SqlClient.SqlConnection(ConnectionConfig.CnnString(DataTypeenum.DataBase.ToString())))
+            {
+                var p = new DynamicParameters();
+                p.Add("@id", Model.Id);
+                connection.Open();
+                connection.Execute("spTournament_Complete", p, commandType: System.Data.CommandType.StoredProcedure);
+
+            }
+
+        }
+    }
 }
+
+
