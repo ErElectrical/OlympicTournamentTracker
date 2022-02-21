@@ -14,7 +14,7 @@ namespace TournamentTrackerUI
     public partial class TournamentTrackerForm : Form
     {
 
-        private TournamentModel tournaements;
+        private TournamentModel tournaements = new TournamentModel();
         BindingList<int> rounds = new BindingList<int>();
         BindingList<MatchupModel> SelectedMatchups = new BindingList<MatchupModel>();
 
@@ -24,6 +24,7 @@ namespace TournamentTrackerUI
         {
             InitializeComponent();
             tournaements = tournamentModel;
+            tournaements.onTournamentComplete += Tournament_OnTournamentComplete;
 
             wirecupRoundlists();
             wireupMatchuplists();
@@ -32,9 +33,22 @@ namespace TournamentTrackerUI
             LoadRound();
         }
 
+        private void Tournament_OnTournamentComplete(object sender, DateTime e)
+        {
+            this.Close();
+        }
+
         private void LoadFormData()
         {
-            TournamentName.Text = tournaements.TournamentName;
+            if(tournaements.TournamentName.Length > 0)
+            {
+                TournamentName.Text = tournaements.TournamentName;
+
+            }
+            else
+            {
+                MessageBox.Show("Please enter TournamentName first");
+            }
         }
 
         private void LoadRound()
@@ -104,21 +118,67 @@ namespace TournamentTrackerUI
 
         }
 
+        private string IsvalidData()
+        {
+            string output = " ";
+            double teamonescorevalue = 0;
+            double teamtwoscorevalue = 0;
+
+            bool scoreonevalid = double.TryParse(TeamoneScorevalue.Text, out teamonescorevalue);
+            bool scoretwovalid = double.TryParse(TeamTwoScoreValue.Text, out teamtwoscorevalue);
+            if(! scoreonevalid)
+            {
+                output = "The score one value is not a valid number";
+            }
+            else if(! scoretwovalid)
+            {
+                output = "The score two value is not a valid number ";
+            }
+            else if(teamonescorevalue == 0 && teamtwoscorevalue == 0)
+            {
+                output = "you didnot enter a score for either team";
+            }
+            else if(teamonescorevalue == teamtwoscorevalue)
+            {
+                output = " We do not allow ties in this application ";
+            }
+            return output;
+
+                
+
+        }
+
+        /// <summary>
+        /// Method is responsible for the event whenever someone ask for score value
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ScoreButton_Click(object sender, EventArgs e)
         {
+            string errorMessage = IsvalidData();
+            if(errorMessage.Length > 0)
+            {
+                MessageBox.Show(errorMessage);
+                return;
+            }
+            // put all the teams that is available in Matchupbox 
             MatchupModel m = (MatchupModel)MatchUpBox.SelectedItem;
             double teamonescorevalue = 0;
             double teamtwoscorevalue = 0;
+            //traversing in to team entries
             for (int i = 0; i < m.Entries.Count; i++)
             {
+                //for teamone 
                 if (i == 0)
                 {
+                    //check weather we are not getting null value
                     if (m.Entries[0].TeamCompeting != null)
                     {
-                       
+                       //do validation for score value
                         bool scorevalid = double.TryParse(TeamoneScorevalue.Text, out teamonescorevalue);
                         if (scorevalid)
                         {
+                            //if validation succed update the score value in enties.
                             m.Entries[0].Score = teamonescorevalue;
                         }
                         else
@@ -129,13 +189,14 @@ namespace TournamentTrackerUI
                     }
 
                 }
-
+                //for teamtwo
                 if (i == 1)
                 {
+                    //check weather we are not getting null as entry
                     if (m.Entries[1].TeamCompeting != null)
                     {
 
-                      
+                      //do validation for score value
                         bool scorevalid = double.TryParse(TeamTwoScoreValue.Text, out teamtwoscorevalue);
                         if (scorevalid)
                         {
@@ -150,42 +211,17 @@ namespace TournamentTrackerUI
                     }
                 }
             }
-            if(teamonescorevalue>teamtwoscorevalue)
+            try
             {
-                //todo team one win
-                m.winner = m.Entries[0].TeamCompeting;
+                TournamentLogic.UpdateTournamentsResult(tournaements);
             }
-            else if(teamtwoscorevalue>teamonescorevalue)
+            catch(Exception ex)
             {
-                m.winner = m.Entries[1].TeamCompeting;
+                MessageBox.Show($"The application has following error : {ex.Message}");
             }
-            else
-            {
-                MessageBox.Show("I do not handle tie games");
-            }
-
-            foreach(List<MatchupModel> round in tournaements.Rounds)
-            {
-                foreach(MatchupModel rm in round)
-                {
-                    foreach(MatchupEntryModel me in rm.Entries)
-                    {
-                        if(me.ParentMatchup != null)
-                        {
-                            if (me.ParentMatchup.id == m.id)
-                            {
-                                me.TeamCompeting = m.winner;
-                                SqlDataConnection sqlData = new SqlDataConnection();
-                                sqlData.UpdateMatchup(rm);
-                            }
-                        }
-                        
-                    }
-                }
-            }
+            //initialise the winner id based on the score
             LoadMatchups((int)RoundDropDown.SelectedItem);
-            SqlDataConnection sql = new SqlDataConnection();
-            sql.UpdateMatchup(m);
+           
 
         }
 
